@@ -34,11 +34,19 @@ st.markdown("""
             color: #ffffff;
             border-color: #66fcf1;
         }
+        .mensaje-espera {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 50vh;
+            font-size: 2.2em;
+            color: #00ffcc;
+            font-weight: bold;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(0, 255, 204, 0.7);
+        }
     </style>
 """, unsafe_allow_html=True)
-
-# Lista de 4 contraseñas válidas de 4 dígitos
-VALID_PINS = ["1234", "4321", "8888", "2026"]
 
 # Inicializar estados
 if "etapa" not in st.session_state:
@@ -46,45 +54,21 @@ if "etapa" not in st.session_state:
 
 # PANTALLA 1: Botón inicial
 if st.session_state.etapa == "inicio":
-    st.markdown("<h2 style='text-align: center; color: #00ffcc;'>SISTEMA DE ACCESO</h2>", unsafe_allow_html=True)
+    st.markdown("<h2 style='text-align: center; color: #00ffcc; margin-top: 30px;'>SISTEMA DE ACCESO</h2>", unsafe_allow_html=True)
+    st.write("")
     if st.button("INICIAR PROTOCOLO"):
-        st.session_state.etapa = "esperando"
+        st.session_state.etapa = "insertar"
         st.rerun()
 
-# PANTALLA 2: Conteo regresivo de 10 segundos
-elif st.session_state.etapa == "esperando":
-    st.markdown("<h3 style='text-align: center;'>ESTABLECIENDO CONEXIÓN SEGURA...</h3>", unsafe_allow_html=True)
-    barra = st.progress(0)
-    tiempo_texto = st.empty()
-    
-    for i in range(10, 0, -1):
-        tiempo_texto.markdown(f"<p style='text-align:center;'>Tiempo restante: {i}s</p>", unsafe_allow_html=True)
-        barra.progress((10 - i + 1) * 10)
-        time.sleep(1)
-        
-    st.session_state.etapa = "login"
+# PANTALLA 2: Solo texto "INSERTAR TARJETA" durante 10 segundos
+elif st.session_state.etapa == "insertar":
+    contenedor = st.empty()
+    contenedor.markdown("<div class='mensaje-espera'>INSERTAR TARJETA</div>", unsafe_allow_html=True)
+    time.sleep(10)
+    st.session_state.etapa = "escaneando"
     st.rerun()
 
-# PANTALLA 3: Ingreso de PIN
-elif st.session_state.etapa == "login":
-    st.markdown("""
-        <div class='cyber-box'>
-            <h3 style='margin-top:0; text-align:center;'>INGRESAR CONTRASEÑA</h3>
-            <p style='font-size: 0.85em; text-align:center; color: #80ced6;'>INTRODUZCA CÓDIGO DE ACCESO (4 DÍGITOS)</p>
-        </div>
-    """, unsafe_allow_html=True)
-    
-    st.write("")
-    pin = st.text_input("PIN:", type="password", max_chars=4, placeholder="****")
-    
-    if st.button("INGRESAR"):
-        if pin in VALID_PINS:
-            st.session_state.etapa = "escaneando"
-            st.rerun()
-        else:
-            st.error("ACCESO DENEGADO: CÓDIGO INVÁLIDO")
-
-# PANTALLA 4: Animación estilo terminal (HUD del video)
+# PANTALLA 3: Tarjeta detectada y lectura de datos (Débito BCP)
 elif st.session_state.etapa == "escaneando":
     st.markdown("""
         <div class='cyber-box'>
@@ -100,9 +84,8 @@ elif st.session_state.etapa == "escaneando":
     prog_bar = st.progress(0)
     consola = st.empty()
 
-    # Simulación de lectura de datos
     logs = [
-        "// TIPO: DÉBITO MASTER",
+        "// TIPO: DÉBITO BCP",
         "// EMV: ACTIVO",
         "// EXTRACCIÓN_VECTORS: [OK]",
         "// VERIFICANDO CLAVE DE AUTENTICACIÓN...",
@@ -113,16 +96,16 @@ elif st.session_state.etapa == "escaneando":
         prog_bar.progress(p)
         status_txt.markdown(f"<h3 style='text-align:center; color:#00ffcc;'>BUSCANDO DATOS... [{p}%]</h3>", unsafe_allow_html=True)
         
-        # Muestra logs secuenciales conforme avanza la barra
         lineas_visibles = logs[:(p // 20) + 1]
         consola.markdown(
-            f"<div style='background:#041014; padding:10px; border-left: 2px solid #00ffcc; font-size:0.85em;'>"
+            f"<div style='background:#041014; padding:10px; border-left: 2px solid #00ffcc; font-size:0.85em; margin-top: 10px;'>"
             + "<br>".join(lineas_visibles) + 
             "</div>", 
             unsafe_allow_html=True
         )
         time.sleep(0.04)
 
+    st.write("")
     st.success("DATOS DESCRIPTADOS EXITOSAMENTE")
     if st.button("REINICIAR"):
         st.session_state.etapa = "inicio"
