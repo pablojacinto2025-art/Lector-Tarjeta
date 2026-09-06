@@ -48,17 +48,48 @@ st.markdown("""
             text-shadow: 0 0 15px rgba(0, 255, 204, 0.7);
             text-align: center;
         }
+        /* Estilos para la tarjeta plástica dinámica */
+        .tarjeta-plastica {
+            width: 290px;
+            height: 175px;
+            margin: 15px auto;
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            color: white;
+            font-family: Arial, sans-serif;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .tarjeta-bcp {
+            background: linear-gradient(135deg, #002a8f, #ff7800);
+        }
+        .tarjeta-interbank {
+            background: linear-gradient(135deg, #009944, #00552b);
+        }
+        .tarjeta-bbva {
+            background: linear-gradient(135deg, #004481, #1464a5);
+        }
+        .chip {
+            width: 38px;
+            height: 28px;
+            background: linear-gradient(135deg, #e6b800, #ffd700);
+            border-radius: 4px;
+            border: 1px solid #b38600;
+        }
     </style>
 """, unsafe_allow_html=True)
 
-# Contraseñas asignadas por entidad
+# Contraseñas configuradas
 PIN_CONFIG = {
     "BCP": "1234",
     "InterBank": "4321",
     "BBVA": "1123"
 }
 
-# Inicialización de variables de estado
+# Inicializar variables
 if "etapa" not in st.session_state:
     st.session_state.etapa = "inicio"
 if "banco_seleccionado" not in st.session_state:
@@ -98,10 +129,32 @@ elif st.session_state.etapa == "insertar":
     st.rerun()
 
 # ==========================================
-# 3. PANTALLA: DETECCIÓN Y BUSCANDO DATOS
+# 3. PANTALLA: DETECTANDO LA TARJETA SELECCIONADA
 # ==========================================
 elif st.session_state.etapa == "escaneando":
-    banco_actual = st.session_state.banco_seleccionado
+    banco = st.session_state.banco_seleccionado
+
+    # Determinar la clase de color según el banco
+    clase_tarjeta = "tarjeta-bbva"
+    if banco == "BCP":
+        clase_tarjeta = "tarjeta-bcp"
+    elif banco == "InterBank":
+        clase_tarjeta = "tarjeta-interbank"
+
+    # Tarjeta gráfica en el centro que cambia según el banco
+    tarjeta_html = f"""
+        <div class='tarjeta-plastica {clase_tarjeta}'>
+            <div style='display:flex; justify-content:space-between; align-items:center;'>
+                <span style='font-size:1.3em; font-weight:bold; letter-spacing:1px;'>{banco}</span>
+                <span style='font-size:0.75em; opacity:0.8;'>DÉBITO</span>
+            </div>
+            <div class='chip'></div>
+            <div style='display:flex; justify-content:space-between; align-items:flex-end;'>
+                <span style='font-size:0.9em; letter-spacing:2px; font-family:monospace;'>•••• •••• •••• 5892</span>
+                <span style='font-size:0.75em;'>09/28</span>
+            </div>
+        </div>
+    """
 
     st.markdown(f"""
         <div class='cyber-box'>
@@ -110,6 +163,7 @@ elif st.session_state.etapa == "escaneando":
                 <span>PUERTO: USB_C</span>
             </div>
             <h2 style='text-align: center; color: #00ffcc; margin: 15px 0 5px 0;'>TARJETA DETECTADA</h2>
+            {tarjeta_html}
         </div>
     """, unsafe_allow_html=True)
 
@@ -117,9 +171,8 @@ elif st.session_state.etapa == "escaneando":
     prog_bar = st.progress(0)
     consola = st.empty()
 
-    # El tipo toma automáticamente el nombre del banco pulsado
     logs = [
-        f"// TIPO: DÉBITO {banco_actual}",
+        f"// TIPO: DÉBITO {banco}",
         "// EMV: ACTIVO",
         "// EXTRACCIÓN_VECTORS: [OK]",
         "// VERIFICANDO CLAVE DE AUTENTICACIÓN...",
@@ -144,16 +197,16 @@ elif st.session_state.etapa == "escaneando":
     st.rerun()
 
 # ==========================================
-# 4. PANTALLA: APARTADO DE CONTRASEÑA
+# 4. PANTALLA: APARTADO SOLO DE CONTRASEÑA
 # ==========================================
 elif st.session_state.etapa == "password":
-    banco_actual = st.session_state.banco_seleccionado
+    banco = st.session_state.banco_seleccionado
 
     st.markdown(f"""
         <div class='cyber-box'>
             <h3 style='text-align:center; color:#00ffcc; margin:0;'>AUTENTICACIÓN REQUERIDA</h3>
             <p style='text-align:center; font-size:0.9em; color:#80ced6; margin-top:8px;'>
-                ENTIDAD SELECCIONADA: DÉBITO {banco_actual}
+                ENTIDAD SELECCIONADA: DÉBITO {banco}
             </p>
         </div>
     """, unsafe_allow_html=True)
@@ -161,7 +214,7 @@ elif st.session_state.etapa == "password":
     pin = st.text_input("Ingresar contraseña (4 dígitos):", type="password", max_chars=4, placeholder="****")
     
     if st.button("INGRESAR"):
-        clave_correcta = PIN_CONFIG.get(banco_actual)
+        clave_correcta = PIN_CONFIG.get(banco)
         if pin == clave_correcta:
             st.success("ACCESO AUTORIZADO")
         else:
