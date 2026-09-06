@@ -51,38 +51,38 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Contraseñas por banco
+# Contraseñas asignadas por entidad
 PIN_CONFIG = {
     "BCP": "1234",
     "InterBank": "4321",
     "BBVA": "1123"
 }
 
-# Control de estados
+# Inicialización de variables de estado
 if "etapa" not in st.session_state:
     st.session_state.etapa = "inicio"
-if "banco" not in st.session_state:
-    st.session_state.banco = "BCP"
+if "banco_seleccionado" not in st.session_state:
+    st.session_state.banco_seleccionado = "BCP"
 
 # ==========================================
-# 1. PANTALLA DE BANCOS (Solo se muestra aquí)
+# 1. PANTALLA INICIAL: SELECCIÓN DE BANCO
 # ==========================================
 if st.session_state.etapa == "inicio":
     st.markdown("<h2 style='text-align: center; color: #00ffcc; margin-top: 40px;'>SISTEMA DE ACCESO</h2>", unsafe_allow_html=True)
     st.write("")
     
     if st.button("BCP"):
-        st.session_state.banco = "BCP"
+        st.session_state.banco_seleccionado = "BCP"
         st.session_state.etapa = "insertar"
         st.rerun()
 
     if st.button("InterBank"):
-        st.session_state.banco = "InterBank"
+        st.session_state.banco_seleccionado = "InterBank"
         st.session_state.etapa = "insertar"
         st.rerun()
 
     if st.button("BBVA"):
-        st.session_state.banco = "BBVA"
+        st.session_state.banco_seleccionado = "BBVA"
         st.session_state.etapa = "insertar"
         st.rerun()
 
@@ -90,17 +90,19 @@ if st.session_state.etapa == "inicio":
 # 2. PANTALLA: SOLO "INSERTAR TARJETA" (10s)
 # ==========================================
 elif st.session_state.etapa == "insertar":
-    pantalla_vacia = st.empty()
-    pantalla_vacia.markdown("<div class='mensaje-espera'>INSERTAR TARJETA</div>", unsafe_allow_html=True)
+    pantalla_espera = st.empty()
+    pantalla_espera.markdown("<div class='mensaje-espera'>INSERTAR TARJETA</div>", unsafe_allow_html=True)
     time.sleep(10)
-    pantalla_vacia.empty()
+    pantalla_espera.empty()
     st.session_state.etapa = "escaneando"
     st.rerun()
 
 # ==========================================
-# 3. PANTALLA: ESCANEO Y BUSCANDO DATOS
+# 3. PANTALLA: DETECCIÓN Y BUSCANDO DATOS
 # ==========================================
 elif st.session_state.etapa == "escaneando":
+    banco_actual = st.session_state.banco_seleccionado
+
     st.markdown(f"""
         <div class='cyber-box'>
             <div style='display: flex; justify-content: space-between; font-size: 0.8em; border-bottom: 1px solid #00ffcc; padding-bottom: 5px;'>
@@ -115,8 +117,9 @@ elif st.session_state.etapa == "escaneando":
     prog_bar = st.progress(0)
     consola = st.empty()
 
+    # El tipo toma automáticamente el nombre del banco pulsado
     logs = [
-        f"// TIPO: DÉBITO {st.session_state.banco}",
+        f"// TIPO: DÉBITO {banco_actual}",
         "// EMV: ACTIVO",
         "// EXTRACCIÓN_VECTORS: [OK]",
         "// VERIFICANDO CLAVE DE AUTENTICACIÓN...",
@@ -141,22 +144,24 @@ elif st.session_state.etapa == "escaneando":
     st.rerun()
 
 # ==========================================
-# 4. PANTALLA: APARTADO SOLO PARA LA CONTRASEÑA
+# 4. PANTALLA: APARTADO DE CONTRASEÑA
 # ==========================================
 elif st.session_state.etapa == "password":
+    banco_actual = st.session_state.banco_seleccionado
+
     st.markdown(f"""
         <div class='cyber-box'>
             <h3 style='text-align:center; color:#00ffcc; margin:0;'>AUTENTICACIÓN REQUERIDA</h3>
-            <p style='text-align:center; font-size:0.85em; color:#80ced6; margin-top:5px;'>
-                ENTIDAD: DÉBITO {st.session_state.banco}
+            <p style='text-align:center; font-size:0.9em; color:#80ced6; margin-top:8px;'>
+                ENTIDAD SELECCIONADA: DÉBITO {banco_actual}
             </p>
         </div>
     """, unsafe_allow_html=True)
     
-    pin = st.text_input("Ingresar contraseña:", type="password", max_chars=4, placeholder="****")
+    pin = st.text_input("Ingresar contraseña (4 dígitos):", type="password", max_chars=4, placeholder="****")
     
     if st.button("INGRESAR"):
-        clave_correcta = PIN_CONFIG.get(st.session_state.banco)
+        clave_correcta = PIN_CONFIG.get(banco_actual)
         if pin == clave_correcta:
             st.success("ACCESO AUTORIZADO")
         else:
