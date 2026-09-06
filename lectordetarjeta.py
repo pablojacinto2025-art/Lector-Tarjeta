@@ -4,7 +4,7 @@ import time
 # Configuración de página
 st.set_page_config(page_title="Terminal Cyber", layout="centered", initial_sidebar_state="collapsed")
 
-# Estilos visuales
+# Estilos visuales con animaciones
 st.markdown("""
     <style>
         .stApp {
@@ -29,25 +29,70 @@ st.markdown("""
             font-weight: bold;
             height: 3.2em;
             border-radius: 5px;
-            margin-top: 10px;
+            margin-top: 8px;
         }
         .stButton>button:hover {
             background-color: #07575b;
             color: #ffffff;
             border-color: #66fcf1;
         }
-        .mensaje-espera {
+        
+        /* Animación moderna para INSERTAR TARJETA */
+        @keyframes pulso-neon {
+            0%, 100% {
+                box-shadow: 0 0 15px rgba(0, 255, 204, 0.4), inset 0 0 10px rgba(0, 255, 204, 0.2);
+                border-color: #00ffcc;
+                transform: scale(1);
+            }
+            50% {
+                box-shadow: 0 0 30px rgba(0, 255, 204, 0.85), inset 0 0 20px rgba(0, 255, 204, 0.4);
+                border-color: #66fcf1;
+                transform: scale(1.02);
+            }
+        }
+        @keyframes parpadeo-flecha {
+            0%, 100% { opacity: 0.2; transform: translateY(0); }
+            50% { opacity: 1; transform: translateY(8px); }
+        }
+        .contenedor-espera {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 70vh;
-            font-size: 2.3em;
-            color: #00ffcc;
-            font-weight: bold;
-            letter-spacing: 2px;
-            text-shadow: 0 0 15px rgba(0, 255, 204, 0.7);
-            text-align: center;
+            height: 65vh;
         }
+        .caja-insertar {
+            border: 2px solid #00ffcc;
+            background: rgba(4, 16, 20, 0.85);
+            border-radius: 12px;
+            padding: 30px 40px;
+            text-align: center;
+            animation: pulso-neon 2s infinite ease-in-out;
+        }
+        .texto-insertar {
+            font-size: 2.1em;
+            font-weight: bold;
+            letter-spacing: 3px;
+            color: #00ffcc;
+            text-shadow: 0 0 12px rgba(0, 255, 204, 0.8);
+            margin: 0;
+        }
+        .ranura-tarjeta {
+            width: 170px;
+            height: 8px;
+            background: #00222b;
+            border: 1px solid #00ffcc;
+            border-radius: 4px;
+            margin: 20px auto 10px auto;
+            box-shadow: 0 0 10px rgba(0,255,204,0.6);
+        }
+        .flecha-animada {
+            font-size: 1.8em;
+            color: #00ffcc;
+            animation: parpadeo-flecha 1.2s infinite ease-in-out;
+            margin-top: 5px;
+        }
+
         /* Estilos de la tarjeta plástica */
         .tarjeta-plastica {
             width: 320px;
@@ -168,11 +213,22 @@ if st.session_state.etapa == "inicio":
         st.rerun()
 
 # ==========================================
-# 2. PANTALLA: SOLO "INSERTAR TARJETA" (10s)
+# 2. PANTALLA: INSERTAR TARJETA (ANIMACIÓN Y PULSO)
 # ==========================================
 elif st.session_state.etapa == "insertar":
     pantalla_espera = st.empty()
-    pantalla_espera.markdown("<div class='mensaje-espera'>INSERTAR TARJETA</div>", unsafe_allow_html=True)
+    pantalla_espera.markdown("""
+        <div class='contenedor-espera'>
+            <div class='caja-insertar'>
+                <div class='flecha-animada'>▼</div>
+                <div class='ranura-tarjeta'></div>
+                <h1 class='texto-insertar'>INSERTAR TARJETA</h1>
+                <p style='color: #80ced6; font-size: 0.85em; margin-top: 15px; letter-spacing: 1px;'>
+                    ESPERANDO DISPOSITIVO FÍSICO...
+                </p>
+            </div>
+        </div>
+    """, unsafe_allow_html=True)
     time.sleep(10)
     pantalla_espera.empty()
     st.session_state.etapa = "escaneando"
@@ -248,7 +304,7 @@ elif st.session_state.etapa == "password":
         st.rerun()
 
 # ==========================================
-# 5. PANTALLA: APARTADO DE SALDO
+# 5. PANTALLA: SALDO CON BOTONES CONTINUAR / CERRAR
 # ==========================================
 elif st.session_state.etapa == "saldo":
     banco = st.session_state.banco_seleccionado
@@ -263,6 +319,11 @@ elif st.session_state.etapa == "saldo":
             <p style='color: #80ced6; font-size: 0.8em; margin-top: 8px;'>CUENTA EN SOLES - {banco}</p>
         </div>
     """, unsafe_allow_html=True)
+
+    # Botón Continuar (vuelve al menú inicial)
+    if st.button("CONTINUAR"):
+        st.session_state.etapa = "inicio"
+        st.rerun()
 
     if st.button("Cerrar Sesión"):
         st.session_state.etapa = "inicio"
