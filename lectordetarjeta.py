@@ -26,8 +26,9 @@ st.markdown("""
             color: #00ffcc;
             border: 1px solid #00ffcc;
             font-weight: bold;
-            height: 3em;
+            height: 3.2em;
             border-radius: 5px;
+            margin-bottom: 8px;
         }
         .stButton>button:hover {
             background-color: #07575b;
@@ -48,19 +49,33 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Inicializar estados
+# Inicializar estados de sesión
 if "etapa" not in st.session_state:
     st.session_state.etapa = "inicio"
+if "banco" not in st.session_state:
+    st.session_state.banco = "BCP"
 
-# PANTALLA 1: Botón inicial
+# PANTALLA 1: Selección entre 3 botones
 if st.session_state.etapa == "inicio":
     st.markdown("<h2 style='text-align: center; color: #00ffcc; margin-top: 30px;'>SISTEMA DE ACCESO</h2>", unsafe_allow_html=True)
     st.write("")
-    if st.button("INICIAR PROTOCOLO"):
+    
+    if st.button("BCP"):
+        st.session_state.banco = "BCP"
         st.session_state.etapa = "insertar"
         st.rerun()
 
-# PANTALLA 2: Solo texto "INSERTAR TARJETA" durante 10 segundos
+    if st.button("InterBank"):
+        st.session_state.banco = "InterBank"
+        st.session_state.etapa = "insertar"
+        st.rerun()
+
+    if st.button("BBVA"):
+        st.session_state.banco = "BBVA"
+        st.session_state.etapa = "insertar"
+        st.rerun()
+
+# PANTALLA 2: Espera de 10 segundos
 elif st.session_state.etapa == "insertar":
     contenedor = st.empty()
     contenedor.markdown("<div class='mensaje-espera'>INSERTAR TARJETA</div>", unsafe_allow_html=True)
@@ -68,7 +83,7 @@ elif st.session_state.etapa == "insertar":
     st.session_state.etapa = "escaneando"
     st.rerun()
 
-# PANTALLA 3: Tarjeta detectada y lectura de datos (Débito BCP)
+# PANTALLA 3: Tarjeta detectada con el banco seleccionado
 elif st.session_state.etapa == "escaneando":
     st.markdown("""
         <div class='cyber-box'>
@@ -84,8 +99,9 @@ elif st.session_state.etapa == "escaneando":
     prog_bar = st.progress(0)
     consola = st.empty()
 
+    # Se adapta automáticamente al botón seleccionado
     logs = [
-        "// TIPO: DÉBITO BCP",
+        f"// TIPO: DÉBITO {st.session_state.banco}",
         "// EMV: ACTIVO",
         "// EXTRACCIÓN_VECTORS: [OK]",
         "// VERIFICANDO CLAVE DE AUTENTICACIÓN...",
