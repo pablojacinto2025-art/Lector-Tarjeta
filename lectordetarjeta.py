@@ -50,8 +50,8 @@ st.markdown("""
         }
         /* Estilos de la tarjeta plástica */
         .tarjeta-plastica {
-            width: 310px;
-            height: 185px;
+            width: 320px;
+            height: 190px;
             margin: 20px auto 25px auto;
             border-radius: 14px;
             padding: 18px 20px;
@@ -62,6 +62,7 @@ st.markdown("""
             color: #ffffff;
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             border: 1px solid rgba(255,255,255,0.2);
+            box-sizing: border-box;
         }
         .tarjeta-bcp {
             background: linear-gradient(135deg, #0d2870 0%, #20418c 45%, #d95e00 100%);
@@ -69,7 +70,7 @@ st.markdown("""
         .tarjeta-interbank {
             background: linear-gradient(135deg, #008f39 0%, #005f24 100%);
         }
-        .tarjeta-bbva {
+        .tarjeta-bbVA {
             background: linear-gradient(135deg, #002e6e 0%, #004481 60%, #0066cc 100%);
         }
         .chip {
@@ -78,6 +79,15 @@ st.markdown("""
             background: linear-gradient(135deg, #e5b300, #ffde59);
             border-radius: 5px;
             border: 1px solid #b38b00;
+        }
+        .tarjeta-numero {
+            font-size: 1.15em;
+            letter-spacing: 3px;
+            font-family: monospace;
+            white-space: nowrap;
+            display: block;
+            margin-top: 8px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
         }
         .saldo-box {
             text-align: center;
@@ -91,22 +101,22 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Parámetros por entidad bancaria
+# Saldos y configuraciones
 CONFIG_BANCOS = {
     "BCP": {
         "pin": "1234",
-        "saldo": "S/ 3,450.00",
+        "saldo": "S/ 3,438.17",
         "clase": "tarjeta-bcp"
     },
     "InterBank": {
         "pin": "4321",
-        "saldo": "S/ 1,820.50",
+        "saldo": "S/ 1,823.49",
         "clase": "tarjeta-interbank"
     },
     "BBVA": {
         "pin": "1123",
-        "saldo": "S/ 5,100.20",
-        "clase": "tarjeta-bbva"
+        "saldo": "S/ 5,078.83",
+        "clase": "tarjeta-bbVA"
     }
 }
 
@@ -116,19 +126,21 @@ if "etapa" not in st.session_state:
 if "banco_seleccionado" not in st.session_state:
     st.session_state.banco_seleccionado = "BCP"
 
-# Función para renderizar la tarjeta según el banco
+# Render de la tarjeta con asteriscos en una sola línea
 def renderizar_tarjeta(banco):
     clase = CONFIG_BANCOS[banco]["clase"]
     return f"""
         <div class='tarjeta-plastica {clase}'>
             <div style='display:flex; justify-content:space-between; align-items:center;'>
-                <span style='font-size:1.5em; font-weight:bold; letter-spacing:1px;'>{banco}</span>
-                <span style='font-size:0.85em; opacity:0.9; font-weight:600;'>DÉBITO</span>
+                <span style='font-size:1.4em; font-weight:bold; letter-spacing:1px;'>{banco}</span>
+                <span style='font-size:0.8em; opacity:0.9; font-weight:600;'>DÉBITO</span>
             </div>
-            <div class='chip'></div>
-            <div style='display:flex; justify-content:space-between; align-items:flex-end;'>
-                <span style='font-size:1.05em; letter-spacing:3px; font-family:monospace;'>•••• •••• •••• 5892</span>
-                <span style='font-size:0.85em; font-weight:bold;'>09/28</span>
+            <div style='display:flex; justify-content:space-between; align-items:center;'>
+                <div class='chip'></div>
+                <span style='font-size:0.75em; opacity:0.85;'>VAL 09/28</span>
+            </div>
+            <div>
+                <span class='tarjeta-numero'>**** &nbsp;**** &nbsp;**** &nbsp;5892</span>
             </div>
         </div>
     """
@@ -213,12 +225,11 @@ elif st.session_state.etapa == "escaneando":
     st.rerun()
 
 # ==========================================
-# 4. PANTALLA: APARTADO DE CONTRASEÑA CON TARJETA
+# 4. PANTALLA: APARTADO DE CONTRASEÑA
 # ==========================================
 elif st.session_state.etapa == "password":
     banco = st.session_state.banco_seleccionado
 
-    # Muestra directamente la tarjeta seleccionada
     st.markdown(renderizar_tarjeta(banco), unsafe_allow_html=True)
     
     pin = st.text_input("Ingresar contraseña (4 dígitos):", type="password", max_chars=4, placeholder="****")
@@ -243,10 +254,8 @@ elif st.session_state.etapa == "saldo":
     banco = st.session_state.banco_seleccionado
     monto_saldo = CONFIG_BANCOS[banco]["saldo"]
 
-    # Muestra la tarjeta del banco
     st.markdown(renderizar_tarjeta(banco), unsafe_allow_html=True)
 
-    # Cuadro con saldo disponible
     st.markdown(f"""
         <div class='saldo-box'>
             <p style='color: #80ced6; font-size: 0.95em; letter-spacing: 1px; margin-bottom: 5px;'>SALDO DISPONIBLE</p>
