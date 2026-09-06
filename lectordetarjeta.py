@@ -48,52 +48,90 @@ st.markdown("""
             text-shadow: 0 0 15px rgba(0, 255, 204, 0.7);
             text-align: center;
         }
-        /* Estilos para la tarjeta plástica dinámica */
+        /* Estilos de la tarjeta plástica */
         .tarjeta-plastica {
-            width: 290px;
-            height: 175px;
-            margin: 15px auto;
-            border-radius: 12px;
-            padding: 16px;
-            box-shadow: 0 8px 20px rgba(0,0,0,0.6);
+            width: 310px;
+            height: 185px;
+            margin: 20px auto 25px auto;
+            border-radius: 14px;
+            padding: 18px 20px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            color: white;
-            font-family: Arial, sans-serif;
+            color: #ffffff;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             border: 1px solid rgba(255,255,255,0.2);
         }
         .tarjeta-bcp {
-            background: linear-gradient(135deg, #002a8f, #ff7800);
+            background: linear-gradient(135deg, #0d2870 0%, #20418c 45%, #d95e00 100%);
         }
         .tarjeta-interbank {
-            background: linear-gradient(135deg, #009944, #00552b);
+            background: linear-gradient(135deg, #008f39 0%, #005f24 100%);
         }
         .tarjeta-bbva {
-            background: linear-gradient(135deg, #004481, #1464a5);
+            background: linear-gradient(135deg, #002e6e 0%, #004481 60%, #0066cc 100%);
         }
         .chip {
-            width: 38px;
-            height: 28px;
-            background: linear-gradient(135deg, #e6b800, #ffd700);
-            border-radius: 4px;
-            border: 1px solid #b38600;
+            width: 42px;
+            height: 30px;
+            background: linear-gradient(135deg, #e5b300, #ffde59);
+            border-radius: 5px;
+            border: 1px solid #b38b00;
+        }
+        .saldo-box {
+            text-align: center;
+            padding: 25px;
+            background: rgba(6, 26, 35, 0.85);
+            border: 2px solid #00ffcc;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 204, 0.2);
+            margin: 20px 0;
         }
     </style>
 """, unsafe_allow_html=True)
 
-# Contraseñas configuradas
-PIN_CONFIG = {
-    "BCP": "1234",
-    "InterBank": "4321",
-    "BBVA": "1123"
+# Parámetros por entidad bancaria
+CONFIG_BANCOS = {
+    "BCP": {
+        "pin": "1234",
+        "saldo": "S/ 3,450.00",
+        "clase": "tarjeta-bcp"
+    },
+    "InterBank": {
+        "pin": "4321",
+        "saldo": "S/ 1,820.50",
+        "clase": "tarjeta-interbank"
+    },
+    "BBVA": {
+        "pin": "1123",
+        "saldo": "S/ 5,100.20",
+        "clase": "tarjeta-bbva"
+    }
 }
 
-# Inicializar variables
+# Inicialización de estados
 if "etapa" not in st.session_state:
     st.session_state.etapa = "inicio"
 if "banco_seleccionado" not in st.session_state:
     st.session_state.banco_seleccionado = "BCP"
+
+# Función para renderizar la tarjeta según el banco
+def renderizar_tarjeta(banco):
+    clase = CONFIG_BANCOS[banco]["clase"]
+    return f"""
+        <div class='tarjeta-plastica {clase}'>
+            <div style='display:flex; justify-content:space-between; align-items:center;'>
+                <span style='font-size:1.5em; font-weight:bold; letter-spacing:1px;'>{banco}</span>
+                <span style='font-size:0.85em; opacity:0.9; font-weight:600;'>DÉBITO</span>
+            </div>
+            <div class='chip'></div>
+            <div style='display:flex; justify-content:space-between; align-items:flex-end;'>
+                <span style='font-size:1.05em; letter-spacing:3px; font-family:monospace;'>•••• •••• •••• 5892</span>
+                <span style='font-size:0.85em; font-weight:bold;'>09/28</span>
+            </div>
+        </div>
+    """
 
 # ==========================================
 # 1. PANTALLA INICIAL: SELECCIÓN DE BANCO
@@ -129,32 +167,10 @@ elif st.session_state.etapa == "insertar":
     st.rerun()
 
 # ==========================================
-# 3. PANTALLA: DETECTANDO LA TARJETA SELECCIONADA
+# 3. PANTALLA: DETECCIÓN Y BUSCANDO DATOS
 # ==========================================
 elif st.session_state.etapa == "escaneando":
     banco = st.session_state.banco_seleccionado
-
-    # Determinar la clase de color según el banco
-    clase_tarjeta = "tarjeta-bbva"
-    if banco == "BCP":
-        clase_tarjeta = "tarjeta-bcp"
-    elif banco == "InterBank":
-        clase_tarjeta = "tarjeta-interbank"
-
-    # Tarjeta gráfica en el centro que cambia según el banco
-    tarjeta_html = f"""
-        <div class='tarjeta-plastica {clase_tarjeta}'>
-            <div style='display:flex; justify-content:space-between; align-items:center;'>
-                <span style='font-size:1.3em; font-weight:bold; letter-spacing:1px;'>{banco}</span>
-                <span style='font-size:0.75em; opacity:0.8;'>DÉBITO</span>
-            </div>
-            <div class='chip'></div>
-            <div style='display:flex; justify-content:space-between; align-items:flex-end;'>
-                <span style='font-size:0.9em; letter-spacing:2px; font-family:monospace;'>•••• •••• •••• 5892</span>
-                <span style='font-size:0.75em;'>09/28</span>
-            </div>
-        </div>
-    """
 
     st.markdown(f"""
         <div class='cyber-box'>
@@ -163,7 +179,7 @@ elif st.session_state.etapa == "escaneando":
                 <span>PUERTO: USB_C</span>
             </div>
             <h2 style='text-align: center; color: #00ffcc; margin: 15px 0 5px 0;'>TARJETA DETECTADA</h2>
-            {tarjeta_html}
+            {renderizar_tarjeta(banco)}
         </div>
     """, unsafe_allow_html=True)
 
@@ -197,30 +213,48 @@ elif st.session_state.etapa == "escaneando":
     st.rerun()
 
 # ==========================================
-# 4. PANTALLA: APARTADO SOLO DE CONTRASEÑA
+# 4. PANTALLA: APARTADO DE CONTRASEÑA CON TARJETA
 # ==========================================
 elif st.session_state.etapa == "password":
     banco = st.session_state.banco_seleccionado
 
-    st.markdown(f"""
-        <div class='cyber-box'>
-            <h3 style='text-align:center; color:#00ffcc; margin:0;'>AUTENTICACIÓN REQUERIDA</h3>
-            <p style='text-align:center; font-size:0.9em; color:#80ced6; margin-top:8px;'>
-                ENTIDAD SELECCIONADA: DÉBITO {banco}
-            </p>
-        </div>
-    """, unsafe_allow_html=True)
+    # Muestra directamente la tarjeta seleccionada
+    st.markdown(renderizar_tarjeta(banco), unsafe_allow_html=True)
     
     pin = st.text_input("Ingresar contraseña (4 dígitos):", type="password", max_chars=4, placeholder="****")
     
     if st.button("INGRESAR"):
-        clave_correcta = PIN_CONFIG.get(banco)
+        clave_correcta = CONFIG_BANCOS[banco]["pin"]
         if pin == clave_correcta:
-            st.success("ACCESO AUTORIZADO")
+            st.session_state.etapa = "saldo"
+            st.rerun()
         else:
             st.error("CONTRASEÑA INCORRECTA")
 
     st.write("")
+    if st.button("Cerrar Sesión"):
+        st.session_state.etapa = "inicio"
+        st.rerun()
+
+# ==========================================
+# 5. PANTALLA: APARTADO DE SALDO
+# ==========================================
+elif st.session_state.etapa == "saldo":
+    banco = st.session_state.banco_seleccionado
+    monto_saldo = CONFIG_BANCOS[banco]["saldo"]
+
+    # Muestra la tarjeta del banco
+    st.markdown(renderizar_tarjeta(banco), unsafe_allow_html=True)
+
+    # Cuadro con saldo disponible
+    st.markdown(f"""
+        <div class='saldo-box'>
+            <p style='color: #80ced6; font-size: 0.95em; letter-spacing: 1px; margin-bottom: 5px;'>SALDO DISPONIBLE</p>
+            <h1 style='color: #00ffcc; margin: 0; font-size: 2.4em;'>{monto_saldo}</h1>
+            <p style='color: #80ced6; font-size: 0.8em; margin-top: 8px;'>CUENTA EN SOLES - {banco}</p>
+        </div>
+    """, unsafe_allow_html=True)
+
     if st.button("Cerrar Sesión"):
         st.session_state.etapa = "inicio"
         st.rerun()
